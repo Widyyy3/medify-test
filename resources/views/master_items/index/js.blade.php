@@ -8,7 +8,7 @@
     var data_per_fetch = 500;
     var data_fetched = 0;
 
-    $(document).ready(function() {
+    $(document).ready(function () {
         $('#table').DataTable({
             searching: false,
             order: [[0, 'desc']],
@@ -16,12 +16,12 @@
         getData()
     });
 
-    $('.btn-get-data').click(function() {
+    $('.btn-get-data').click(function () {
         getData()
     })
 
-    function getData(){
-        
+    function getData() {
+
         $('#loading-filter').show();
         var dataTableObj = $('#table').DataTable();
         var filter_kode = $('#filter-kode').val()
@@ -36,31 +36,41 @@
             tryCount: 0,
             retryLimit: 3,
             data: 'kode=' + filter_kode + '&nama=' + filter_nama + '&hargamin=' + filter_harga_min + '&hargamax=' + filter_harga_max,
-            success: function(results) {
+            success: function (results) {
                 var data = results.data
 
-                $.each(data, function(index, item) {
-                    array_temp = [];
-                    var harga_jual = item.harga_beli + item.harga_beli * item.laba / 100;
-                    harga_jual = Math.round(harga_jual)
+                $.each(data, function (index, item) {
+                    var array_temp = [];
+
+                    var harga_jual = item.harga_beli + (item.harga_beli * item.laba / 100);
+                    harga_jual = Math.round(harga_jual);
+
                     var kode = item.kode;
 
-                    var html = `<a href="{{url('master-items/view/')}}/` + kode + `" class="btn btn-primary">View</a>`
+                    var html = `<a href="{{ url('master-items/view/') }}/${kode}" class="btn btn-primary">View</a>`;
 
-                    $.each(item, function(obj_name, obj_value) {
-                        if (obj_name == 'laba') return false;
-                        array_temp.push(obj_value)
-                    })
-                    array_temp.push(harga_jual)
-                    array_temp.push(item.supplier)
-                    array_temp.push(html)
+                    var kategori = '';
 
+                    if (item.kategoris && item.kategoris.length > 0) {
+                        kategori = item.kategoris.map(function (kat) {
+                            return kat.nama;
+                        }).join(', ');
+                    }
+
+                    array_temp.push(item.kode);
+                    array_temp.push(item.nama);
+                    array_temp.push(item.jenis);
+                    array_temp.push(kategori);
+                    array_temp.push(item.harga_beli);
+                    array_temp.push(harga_jual);
+                    array_temp.push(item.supplier);
+                    array_temp.push(html);
 
                     dataTableObj.row.add(array_temp).draw(true);
                 });
                 $('#loading-filter').hide();
             },
-            error: function(xhr, textStatus, errorThrown) {
+            error: function (xhr, textStatus, errorThrown) {
                 this.tryCount++;
                 if (this.tryCount <= this.retryLimit) {
                     $.ajax(this);
